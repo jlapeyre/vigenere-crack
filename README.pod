@@ -1,0 +1,169 @@
+=head1 NAME
+
+cipher.pl - Vigenere cipher. Encoding, decoding, cracking.
+
+=head1 SYNOPSIS
+
+B<cipher.pl> [B<-help>] [B<-man>] [B<-encode>] [B<-decode>] [B<-crack>] 
+[B<-try_length>] [B<-key I<KEY>>] [B<-threshold I<TH>>] [B<-ratio> I<RATIO>]  
+[B<-max_length> I<NUM>] [B<-verbose>] [B<-pod>] [B<-ofile> I<OFILE>] [I<IFILE> ...]
+
+See below for more description of these switches.
+
+=head1 DESCRIPTION
+
+I<cipher.pl> encodes plaintext and either decodes or cracks coded text using the Vigenere cipher.
+For encoding, the plaintext is supplied in a file I<IFILE>, while the key, which is a string of letters
+is given on the command line with B<-key>. For decoding the encoded text is supplied in the file I<IFILE>.
+
+The option B<-freq> prints character frequencies and exits without performing any transcoding
+or cracking.
+
+Before encoding or frequency countng, the iput text is stripped of any non-alphabetic charcters and
+is converted to upper case. The cracking algorithm assumes that the coded message consists only of
+characters B<A-Z>.
+
+This program was written for educational purposes.
+
+=head1 OPTIONS
+
+The option names may be given as unique abbreviations. 
+For example, B<-dec>, or B<-d> rather than B<-decode>.
+
+=over
+  
+
+=item B<-help>  
+
+short help.
+
+=item B<-man>
+
+long help.
+
+=item  B<-key> I<KEY> (string) 
+
+cipher key for encoding or decoding.
+
+=item B<-encode>      
+
+encode the message in each input I<IFILE> using I<KEY>.
+encode is the default and does not need to be specified.
+
+=item B<-decode>       
+
+decode the encrypted message in each I<IFILE>.
+
+=item  B<-ofile> I<OFILE>
+
+send output to I<OFILE> rather than standard out (the terminal).
+
+=item  B<-crack>
+
+Try to find the key of the encrypted message in I<IFILE> by analyzing character
+frequencies.
+
+=item  B<-try_length> I<LEN> (positive integer)
+
+Like B<-crack>, except only keys of length I<LEN> are analyzed.
+
+=item B<-threshold> I<TH> (floating point number) 
+
+The threshold score at which the code is considered
+cracked. Default value is C<0.1>. The key cracking algorithm
+rejects scores that are higher than I<TH>. A lower value of I<TH>
+requires that the trial frequency table matches more closely
+the standard frequency table.
+
+=item B<-ratio> I<RATIO> (positive integer)
+
+Only the first C<I<RATIO> * key_length> characters of the encrypted message are analyzed when
+cracking. The default value of I<RATIO> is C<1000>. Try increasing this value if the
+algorithm fails to find the key. If I<RATIO> is zero or negative, then the entire
+encrypted message is analyzed.
+
+=item B<-max_length> I<NUM> (positive integer)
+
+The maximum keylength to try when cracking. If this option is not given, the
+maximum defaults to the length of the encoded message in I<IFILE>.
+
+=item B<-freq>
+
+Compute and print the frequency table of the input file and exit.
+
+=item B<-verbose>
+
+Print some informative messages while running.
+
+=item B<-pod>
+
+Write this documentation to the file F<README.pod>.
+
+=back
+
+=head1 EXAMPLES
+
+=over
+
+=item *
+
+Encode the text in F<ulysses.txt> with key C<joyce> and write the
+result to F<codedtext.txt>.
+
+     cipher.pl -key joyce  -o codedtext.txt ulysses.txt
+
+=item *
+
+Decode the text in F<codedtext.txt> and write the
+result to F<decodedtext.txt>.
+
+     cipher.pl -key joyce  -dec  -o decodedtext.txt codedtext.txt
+
+=item *
+
+Try to find the encryption key used to encode input file F<codedtext.txt>.
+
+     cipher.pl -crack  codedtext.txt
+
+=item *
+
+Encode as above, but write output to standard out.
+
+     cipher.pl -key joyce  ulysses.txt
+
+=back
+
+=head1 ALGORITHM
+
+The cracking algorithm first searches for a key of length one, then of length two, etc. For each
+key length it computes the frequencies of characters in the input text that would have been
+encoded by the same position in the keyword. It then repeatedly rotates this freqency sequence and
+records the rotation that gives the best match to the average frequencies in english language text.
+It then averages scores from the best match for each position in the key and compares this to a
+threshold value. If the average score is below the threshold, then these positions are reported
+as a likely key and the program exits. Otherwise the keylength is incremented and the algorithm
+continues.
+
+The score is the average over the alphabet of the relative
+mean squared deviation of the observed frequency from the
+frequency standard. 
+
+=head2 Possible Improvements
+
+=over
+
+=item * Account for the effect of  poisson statistics on the score.
+
+=item * Add support for other languages.
+
+=back
+
+=head1 REQUIRES
+
+Perl 5.10
+
+=head1 AUTHOR
+
+John Lapeyre <gjlapeyre@cpan.org>
+
+=cut
